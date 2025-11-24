@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import 'dotenv/config'; // <--- garante que as variáveis do .env sejam carregadas
 import { DataSource } from 'typeorm';
 
