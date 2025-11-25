@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsString,
   Length,
+  Matches,
   MinLength,
 } from 'class-validator';
 
@@ -23,5 +24,12 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'password must be at least 8 character' })
+  @Matches(/[A-Z]/, {
+    message: 'Password must contain at least 1 uppercase letter.',
+  })
+  @Matches(/[0-9]/, { message: 'Password must contain at least 1 number.' })
+  @Matches(/[^A-Za-z0-9]/, {
+    message: 'Password must contain ate least 1 special character.',
+  })
   password: string;
 }

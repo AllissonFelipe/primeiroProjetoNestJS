@@ -1,11 +1,15 @@
+/* eslint-disable prettier/prettier */
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as Joi from 'joi';
+import { AuthConfig } from './auth.config';
 
 export interface ConfigType {
   database: TypeOrmModuleOptions;
+  auth: AuthConfig;
 }
 
 export const appConfigSchema = Joi.object({
+  APP_MESSAGE_PREFIX: Joi.string().default('Hello '),
   DB_HOST: Joi.string().default('localhost'),
   DB_PORT: Joi.number().default(5432),
   DB_USER: Joi.string().required(),

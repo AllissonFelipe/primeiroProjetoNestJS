@@ -35,28 +35,16 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
   // Find One User ByID
-  async findOneUserById(id: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id });
-    if (!user) {
-      throw new NotFoundException(`User with id ${id} not found.`);
-    }
-    return user;
+  async findOneUserById(id: string): Promise<User | null> {
+    return await this.userRepository.findOneBy({ id });
   }
   // Find One User ByEmail
-  async findOneUserByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ email });
-    if (!user) {
-      throw new NotFoundException(`User with email ${email} not found.`);
-    }
-    return user;
+  async findOneUserByEmail(email: string): Promise<User | null> {
+    return await this.userRepository.findOneBy({ email });
   }
   // Find One User ByCpf
-  async findOneUserByCpf(cpf: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ cpf });
-    if (!user) {
-      throw new NotFoundException(`User with email ${cpf} not found.`);
-    }
-    return user;
+  async findOneUserByCpf(cpf: string): Promise<User | null> {
+    return await this.userRepository.findOneBy({ cpf });
   }
   // Find all Users
   async findAllUsers(): Promise<User[]> {
@@ -73,8 +61,11 @@ export class UsersService {
         updateUserDto.password,
       );
     }
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
     Object.assign(user, updatedFields);
-    return this.userRepository.save(user);
+    return await this.userRepository.save(user);
   }
   // Delete User
   async deleteUserById(id: string): Promise<void> {
