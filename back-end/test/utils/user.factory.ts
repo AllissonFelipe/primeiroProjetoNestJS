@@ -18,9 +18,7 @@ export const createUser = (override: PartialUser = {}): User => {
 
   user.name = 'Allisson';
   user.cpf = randomCpf(); // <<<<< cpf aleatório
-  console.log(user.cpf);
   user.email = randomEmail(); // <<<<< email aleatório
-  console.log(user.email);
   user.password = '1A#2a345678';
   user.createdAt = new Date();
   user.updatedAt = new Date();

@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`AppController (e2e) should fail login with incorrect email 1`] = `
+{
+  "error": "Unauthorized",
+  "message": "Invalid credentials.",
+  "statusCode": 401,
+}
+`;
+
+exports[`AppController (e2e) should fail login with incorrect password 1`] = `
+{
+  "error": "Unauthorized",
+  "message": "Invalid credentials.",
+  "statusCode": 401,
+}
+`;

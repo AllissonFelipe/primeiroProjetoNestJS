@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import { validate } from 'class-validator';
 import { createUser } from './utils/user.factory';
 
