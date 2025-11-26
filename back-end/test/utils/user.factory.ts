@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { User } from '../../entities/user.entity';
+
+import { User } from '../../src/users/entities/user.entity';
 
 type PartialUser = Partial<User>;
 

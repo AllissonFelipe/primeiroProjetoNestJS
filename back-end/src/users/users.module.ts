@@ -21,15 +21,12 @@ import { APP_GUARD } from '@nestjs/core';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: TypedConfigService) => {
-        const authConfig = configService.get<AuthConfig>('auth');
-        return {
-          secret: authConfig?.jwt.secret,
-          signOptions: {
-            expiresIn: authConfig?.jwt.expiresIn,
-          },
-        };
-      },
+      useFactory: (config: TypedConfigService) => ({
+        secret: config.get<AuthConfig>('auth')?.jwt.secret,
+        signOptions: {
+          expiresIn: config.get<AuthConfig>('auth')?.jwt.expiresIn,
+        },
+      }),
     }),
   ],
   providers: [

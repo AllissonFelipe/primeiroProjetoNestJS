@@ -2,7 +2,11 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Get,
+  HttpCode,
+  NotFoundException,
   Post,
+  Request,
   SerializeOptions,
   UseInterceptors,
 } from '@nestjs/common';
@@ -13,6 +17,7 @@ import { CreateUserDto } from '../dtos/createUser.dto';
 import { User } from '../entities/user.entity';
 import { LoginDto } from '../dtos/login.dto';
 import { LoginResponse } from '../utils/login.response';
+import type { AuthRequest } from './auth.request';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -31,9 +36,19 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   @Public()
   async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
     const accessToken = await this.authService.loginUser(loginDto);
     return new LoginResponse({ accessToken });
+  }
+
+  @Get('profile')
+  async profileUser(@Request() request: AuthRequest): Promise<User> {
+    const user = await this.usersService.findOneUserById(request.user.sub);
+    if (user) {
+      return user;
+    }
+    throw new NotFoundException();
   }
 }
