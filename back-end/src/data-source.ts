@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import 'dotenv/config'; // <--- garante que as variáveis do .env sejam carregadas
+import path from 'path';
 import { DataSource } from 'typeorm';
 
 export const AppDataSource = new DataSource({
@@ -10,7 +11,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/migrations/*{.ts,.js}'],
+  entities: [path.join(__dirname + '/**/*.entity{.ts,.js}')],
+  migrations: [path.join(__dirname + '/migrations/*{.ts,.js}')],
   synchronize: false,
 });

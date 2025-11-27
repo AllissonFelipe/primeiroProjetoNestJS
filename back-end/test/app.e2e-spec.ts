@@ -43,21 +43,33 @@ describe('AppController (e2e)', () => {
   });
   // Login com email e password corretos
   it('auth/login (POST) - login success', async () => {
+    const user = createUser();
+    const resCreate = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user)
+      .expect(201);
     const login = loginUser({
-      email: 'allissonTeste@example.com',
-      password: 'JaquesFreud123#',
+      email: user.email,
+      password: user.password,
     });
-    const res = await request(app.getHttpServer())
+    const resLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .send(login)
       .expect(200);
-    expect(res.body).toHaveProperty('accessToken');
-    expect(typeof res.body.accessToken).toBe('string');
-    expect(res.body.accessToken.split('.').length).toBe(3);
+    expect(resLogin.body).toHaveProperty('accessToken');
+    expect(resLogin.body).toHaveProperty('selector');
+    expect(resLogin.body).toHaveProperty('refreshToken');
+    expect(typeof resLogin.body.accessToken).toBe('string');
+    expect(resLogin.body.accessToken.split('.').length).toBe(3);
   });
   // Cadastro com email duplicado
   it('should fail in create user with duplicate email', async () => {
-    const userDto = createUser({ email: 'allissonTeste@example.com' });
+    const user = createUser();
+    const resCreate = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user)
+      .expect(201);
+    const userDto = createUser({ email: user.email });
     const resq = await request(app.getHttpServer())
       .post('/auth/register')
       .send(userDto)
@@ -68,7 +80,12 @@ describe('AppController (e2e)', () => {
   });
   // Cadastro com CPF duplicado
   it('should fail in create user with duplicate cpf', async () => {
-    const userDto = createUser({ cpf: '20583109637' });
+    const user = createUser();
+    const resCreate = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user)
+      .expect(201);
+    const userDto = createUser({ cpf: user.cpf });
     const resq = await request(app.getHttpServer())
       .post('/auth/register')
       .send(userDto)
@@ -159,5 +176,59 @@ describe('AppController (e2e)', () => {
     expect(resq.body).toHaveProperty('message');
     expect(resq.body).not.toHaveProperty('email');
     expect(resq.body).not.toHaveProperty('id');
+  });
+  it('shoul create, login, profile, refresh, logout', async () => {
+    const user = createUser();
+    const cUser = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user)
+      .expect(201);
+
+    const lUser = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: user.email, password: user.password })
+      .expect(200);
+    const { accessToken, selector, refreshToken } = lUser.body;
+    expect(accessToken).toBeDefined();
+    expect(selector).toBeDefined();
+    console.log(selector);
+    expect(refreshToken).toBeDefined();
+
+    const profRes = await request(app.getHttpServer())
+      .get('/auth/profile')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(profRes.body).toMatchObject({
+      name: user.name,
+      email: user.email,
+    });
+    expect(profRes.body.id).toBe(cUser.body.id);
+
+    const refreshRes = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ selector, oldToken: refreshToken })
+      .expect(200);
+    console.log(refreshRes.body.selector);
+    expect(refreshRes.body.accessToken).toBeDefined();
+    expect(refreshRes.body.selector).toBeDefined();
+    expect(refreshRes.body.refreshToken).toBeDefined();
+
+    // LOGOUT //
+    const newRefreshToken = refreshRes.body.refreshToken;
+    const refreshLogout = refreshRes.body.selector;
+    const logoutRes = await request(app.getHttpServer())
+      .post('/auth/logout')
+      .send({ selector: refreshLogout })
+      .expect(200);
+    expect(logoutRes.body.message).toBe('Logged out sucessfully');
+
+    // CHECK THAT REFRESH TOKEN WAS REVOKED //
+    const invalidRefreshToken = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({
+        selector: refreshLogout,
+        oldToken: refreshRes.body.refreshToken,
+      })
+      .expect(401);
   });
 });

@@ -12,6 +12,10 @@ async function bootstrap() {
       transform: true, // transforma payloads para os tipos definidos no DTO
     }),
   );
+  app.enableCors({
+    origin: 'http://localhost:5000', // Porta do Next.js
+    methods: 'GET,POST,PUT,DELETE',
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

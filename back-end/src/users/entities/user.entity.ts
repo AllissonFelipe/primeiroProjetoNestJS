@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { Expose } from 'class-transformer';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
 
 @Entity()
 export class User {
@@ -46,4 +48,8 @@ export class User {
   @UpdateDateColumn()
   @Expose()
   updatedAt: Date;
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  @Expose()
+  refreshTokens: RefreshToken[];
 }

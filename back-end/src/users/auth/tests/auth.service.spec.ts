@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../auth.service';
 import { PasswordService } from '../../password/password.service';
@@ -8,9 +9,16 @@ import { User } from '../../entities/user.entity';
 import { CreateUserDto } from 'src/users/dtos/createUser.dto';
 import { LoginDto } from 'src/users/dtos/login.dto';
 import { UnauthorizedException } from '@nestjs/common';
+import { RefreshToken } from '../entities/refresh-token.entity';
 
 describe('AuthService', () => {
   let service: AuthService;
+  const mockRefreshTokenRepository = {
+    findOne: jest.fn(),
+    save: jest.fn(),
+    remove: jest.fn(),
+    create: jest.fn(),
+  };
   const mockUsersService = {
     createUser: jest.fn(),
     findOneUserByEmail: jest.fn(),
@@ -29,6 +37,10 @@ describe('AuthService', () => {
         { provide: PasswordService, useValue: mockPasswordService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: UsersService, useValue: mockUsersService },
+        {
+          provide: getRepositoryToken(RefreshToken),
+          useValue: mockRefreshTokenRepository,
+        },
         {
           provide: getRepositoryToken(User),
           useValue: {
@@ -89,7 +101,14 @@ describe('AuthService', () => {
         sub: user.id,
         name: user.name,
       });
-      expect(result).toBe('token');
+      expect(result).toEqual({
+        accessToken: 'token',
+        refreshToken: expect.any(String),
+        selector: expect.any(String),
+      });
+      expect(result.accessToken).toBe('token');
+      expect(result.selector).toEqual(expect.any(String));
+      expect(result.refreshToken).toEqual(expect.any(String));
     });
     it('should throw UnauthorizedException if user not found', async () => {
       mockUsersService.findOneUserByEmail.mockResolvedValue(null);
@@ -103,6 +122,13 @@ describe('AuthService', () => {
       await expect(service.loginUser(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+    it('should remove refresh token and return message', async () => {
+      const mockToken = { selector: '1234' };
+      mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
+      const result = await service.logoutUser('1234');
+      expect(mockRefreshTokenRepository.remove).toHaveBeenCalledWith(mockToken);
+      expect(result).toEqual({ message: 'Logged out sucessfully' });
     });
   });
 });

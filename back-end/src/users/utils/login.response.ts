@@ -8,4 +8,12 @@ export class LoginResponse {
   @Expose()
   @IsString()
   accessToken: string;
+
+  @Expose()
+  @IsString()
+  refreshToken: string;
+
+  @Expose()
+  @IsString()
+  selector: string;
 }

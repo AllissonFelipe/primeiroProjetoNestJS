@@ -18,6 +18,8 @@ import { User } from '../entities/user.entity';
 import { LoginDto } from '../dtos/login.dto';
 import { LoginResponse } from '../utils/login.response';
 import type { AuthRequest } from './auth.request';
+import { RefreshTokenDto } from '../dtos/refresh-token.dto';
+import { LogoutResponse } from '../utils/logout.response';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -39,10 +41,30 @@ export class AuthController {
   @HttpCode(200)
   @Public()
   async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
-    const accessToken = await this.authService.loginUser(loginDto);
-    return new LoginResponse({ accessToken });
+    const { accessToken, selector, refreshToken } =
+      await this.authService.loginUser(loginDto);
+    return new LoginResponse({ accessToken, selector, refreshToken });
   }
-
+  @Post('refresh')
+  @Public()
+  @HttpCode(200)
+  async refreshToken(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<LoginResponse> {
+    const { accessToken, selector, refreshToken } =
+      await this.authService.refreshToken(
+        refreshTokenDto.selector,
+        refreshTokenDto.oldToken,
+      );
+    return new LoginResponse({ accessToken, selector, refreshToken });
+  }
+  @Post('logout')
+  @HttpCode(200)
+  @Public()
+  async logout(@Body('selector') selector: string) {
+    const result = await this.authService.logoutUser(selector);
+    return new LogoutResponse(result);
+  }
   @Get('profile')
   async profileUser(@Request() request: AuthRequest): Promise<User> {
     const user = await this.usersService.findOneUserById(request.user.sub);

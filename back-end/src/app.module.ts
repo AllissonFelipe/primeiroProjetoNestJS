@@ -13,6 +13,7 @@ import { TypedConfigService } from './config/typed-config.service';
 import { authConfig } from './config/auth.config';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
+import { RefreshToken } from './users/auth/entities/refresh-token.entity';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { User } from './users/entities/user.entity';
       inject: [ConfigService],
       useFactory: (configService: TypedConfigService) => ({
         ...configService.get('database'),
-        entities: [User],
+        entities: [User, RefreshToken],
       }),
     }),
     ConfigModule.forRoot({
