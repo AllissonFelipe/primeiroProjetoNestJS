@@ -30,24 +30,73 @@ export class AuthService {
   public async registerUser(createUserDto: CreateUserDto): Promise<User> {
     return await this.usersService.createUser(createUserDto);
   }
+
   // Login do usuário que gera accessToken e refreshToken
   public async loginUser(
     loginDto: LoginDto,
   ): Promise<{ accessToken: string; selector: string; refreshToken: string }> {
+    // Procurando o usuário pelo email
     const user = await this.usersService.findOneUserByEmail(loginDto.email);
+    // Se não o achou lança um exceção
     if (!user) {
       throw new UnauthorizedException('Invalid credentials.');
     }
+    // se achou o usuário mas a senha está errada, lança uma exceção
     if (
       !(await this.passwordService.verify(loginDto.password, user.password))
     ) {
       throw new UnauthorizedException('Invalid credentials.');
     }
-    const accessToken = await this.generateToken(user);
-    const { selector, refreshToken } = await this.generateRefreshToken(user);
 
-    return { accessToken, selector, refreshToken };
+    // Gerando accessToken (curto prazo) - se email e senha estão corretos
+    const accessToken = await this.generateToken(user);
+
+    // Se o selector e refreshToken(longo prazo) forem fornecidos, tenta reutilizar o refreshToken(longo prazo)
+    if (loginDto.selector && loginDto.refreshToken) {
+      const tokenRecord = await this.refreshTokenRepository.findOne({
+        where: { selector: loginDto.selector },
+        relations: ['user'],
+      });
+
+      if (tokenRecord) {
+        // Verifica se o refreshToken enviado corresponde ao hash armazenado
+        const isValid = await bcrypt.compare(
+          loginDto.refreshToken,
+          tokenRecord.tokenHash,
+        );
+
+        if (isValid && tokenRecord.expiresAt > new Date()) {
+          // O refreshToken é válido e não expirou, reutilizamos o selector e refreshToken
+          return {
+            accessToken,
+            selector: tokenRecord.selector,
+            refreshToken: loginDto.refreshToken, // Retorna o refreshToken enviado (sem precisar gerar um novo)
+          };
+        }
+      }
+
+      // Caso o refreshToken ou o selector não sejam válidos ou tenham expirado, vamos gerar um novo refreshToken
+      // Aqui, geramos um novo refreshToken porque o antigo não é válido
+      const { selector: newSelector, refreshToken: newRefreshToken } =
+        await this.generateRefreshToken(user);
+
+      return {
+        accessToken,
+        selector: newSelector,
+        refreshToken: newRefreshToken,
+      };
+    }
+
+    const { selector: newSelector, refreshToken: newRefreshToken } =
+      await this.generateRefreshToken(user);
+
+    return {
+      accessToken,
+      selector: newSelector,
+      refreshToken: newRefreshToken,
+    };
   }
+
   // Logout - removendo refreshToken pelo selector
   public async logoutUser(selector: string) {
     const refreshToken = await this.refreshTokenRepository.findOne({
