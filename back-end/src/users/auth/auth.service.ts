@@ -49,6 +49,7 @@ export class AuthService {
     }
 
     // Gerando accessToken (curto prazo) - se email e senha estão corretos
+    // essa const 'accessToken' recebe o payload que tem o id e nome do usuário
     const accessToken = await this.generateToken(user);
 
     // Se o selector e refreshToken(longo prazo) forem fornecidos, tenta reutilizar o refreshToken(longo prazo)

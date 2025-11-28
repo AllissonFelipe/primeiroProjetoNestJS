@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   NotFoundException,
+  Patch,
   Post,
   Request,
   SerializeOptions,
@@ -20,6 +21,7 @@ import { LoginResponse } from '../utils/login.response';
 import type { AuthRequest } from './auth.request';
 import { RefreshTokenDto } from '../dtos/refresh-token.dto';
 import { LogoutResponse } from '../utils/logout.response';
+import { UpdateUserDto } from '../dtos/updateUser.dto';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -72,5 +74,16 @@ export class AuthController {
       return user;
     }
     throw new NotFoundException();
+  }
+  @Patch('profile')
+  async updateProfile(
+    @Request() request: AuthRequest,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    const updated = await this.usersService.updateUser(
+      request.user.sub,
+      updateUserDto,
+    );
+    return updated;
   }
 }

@@ -74,7 +74,7 @@ describe('AppController (e2e)', () => {
       .post('/auth/register')
       .send(userDto)
       .expect(409);
-    expect(resq.body.message).toBe('Email ja cadastrado no sistema.');
+    expect(resq.body.message).toBe('Email já cadastrado no sistema.');
     expect(resq.body).toHaveProperty('statusCode');
     expect(resq.body).toHaveProperty('message');
   });
@@ -230,5 +230,56 @@ describe('AppController (e2e)', () => {
         oldToken: refreshRes.body.refreshToken,
       })
       .expect(401);
+  });
+
+  // Teste para ver se atualização de usuário com um email ja existente no sistema gera conflito
+  it('should throw conflicException if updating email to an existing one', async () => {
+    const user1 = createUser();
+    const user2 = createUser();
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user1)
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user2)
+      .expect(201);
+    const loginUser2 = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: user2.email, password: user2.password })
+      .expect(200);
+    const accessToken = loginUser2.body.accessToken;
+    const result = await request(app.getHttpServer())
+      .patch('/auth/profile')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ email: user1.email })
+      .expect(409);
+    expect(result.body).toHaveProperty('statusCode', 409);
+    expect(result.body.message).toBe('Email já cadastrado no sistema.');
+  });
+  //Teste para ver se atualização de usuário com um CPF ja existente no sistema gera conflito
+  it('should throw ConflictException if updating cpf to an existing one', async () => {
+    const user1 = createUser();
+    const user2 = createUser();
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user1)
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user2)
+      .expect(201);
+    const loginUser2 = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: user2.email, password: user2.password })
+      .expect(200);
+    const accessToken = loginUser2.body.accessToken;
+    const result = await request(app.getHttpServer())
+      .patch('/auth/profile')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ cpf: user1.cpf })
+      .expect(409);
+    expect(result.body).toHaveProperty('statusCode', 409);
+    expect(result.body.message).toBe('CPF ja cadastrado no sistema.');
   });
 });

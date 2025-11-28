@@ -46,13 +46,20 @@ export class UsersService {
   async findOneUserByCpf(cpf: string): Promise<User | null> {
     return await this.userRepository.findOneBy({ cpf });
   }
+
   // Find all Users
   async findAllUsers(): Promise<User[]> {
     return await this.userRepository.find();
   }
+
   // Update User
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOneUserById(id);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    await this.verifyEmailAndCpf(updateUserDto);
     const updatedFields: Partial<User> = {
       ...updateUserDto,
     };
@@ -60,9 +67,6 @@ export class UsersService {
       updatedFields.password = await this.passwordService.hash(
         updateUserDto.password,
       );
-    }
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado.');
     }
     Object.assign(user, updatedFields);
     return await this.userRepository.save(user);
@@ -74,14 +78,21 @@ export class UsersService {
   }
 
   // Função para ver se email ou cpf ja está existente no banco de dados.
-  private async verifyEmailAndCpf(createUserDto: CreateUserDto): Promise<void> {
+  private async verifyEmailAndCpf(
+    dto: CreateUserDto | UpdateUserDto,
+  ): Promise<void> {
+    const { email, cpf } = dto;
+    if (!email && !cpf) return;
+    const where: any[] = [];
+    if (email) where.push({ email });
+    if (cpf) where.push({ cpf });
     const exist = await this.userRepository.findOne({
-      where: [{ email: createUserDto.email }, { cpf: createUserDto.cpf }],
+      where,
     });
-    if (exist?.email === createUserDto.email) {
-      throw new ConflictException('Email ja cadastrado no sistema.');
+    if (exist && exist.email === email) {
+      throw new ConflictException('Email já cadastrado no sistema.');
     }
-    if (exist?.cpf === createUserDto.cpf) {
+    if (exist && exist.cpf === cpf) {
       throw new ConflictException('CPF ja cadastrado no sistema.');
     }
   }
