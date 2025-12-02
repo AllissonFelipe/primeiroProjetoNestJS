@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/await-thenable */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -116,32 +118,91 @@ export class AuthService {
     selector: string,
     oldToken: string,
   ): Promise<{ accessToken: string; selector: string; refreshToken: string }> {
-    // Procura o RefreshToke, se achou, ja carrega os dados do usuario desse refreshToken, que podem ser usados futuramente.
+    // ------------------------------------------
+    // PROCURANDO REFRESH TOKEN NO BANCO DE DADOS
+    // ------------------------------------------
+    console.log(
+      `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] PROCURANDO REFRESH TOKEN NO BANCO DE DADOS ---`,
+    );
     const tokenRecord = await this.refreshTokenRepository.findOne({
       where: { selector },
       relations: ['user'],
     });
-    if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token.');
-    console.log('Token record found: ', tokenRecord);
+
+    // ----------------------------------------------
+    // REFRESH TOKEN NÃO ENCONTRADO NO BANCO DE DADOS
+    // ----------------------------------------------
+    if (!tokenRecord) {
+      console.log(
+        `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] REFRESH TOKEN NÃO ENCONTRADO NO BANCO DE DADOS`,
+      );
+      throw new UnauthorizedException('Invalid refresh token.');
+    }
+
+    // ----------------
+    // TOKEN ENCONTRADO
+    // ----------------
+    console.log(
+      `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] REFRESH TOKEN ENCONTRADO\nREFRESH TOKEN ID: ${tokenRecord.id}\nREFRESH TOKEN SELECTOR: ${tokenRecord.selector}\nREFRESH TOKEN USERID: ${tokenRecord.user.id}\nREFRESH TOKEN EXPIRAÇÃO: ${tokenRecord.expiresAt}`,
+    );
+
+    // ---------------
+    // VALIDANDO TOKEN
+    // ---------------
+    console.log(
+      `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] VALIDANDO REFRESH TOKEN`,
+    );
     const isValid = await bcrypt.compare(oldToken, tokenRecord.tokenHash);
-    if (!isValid) throw new UnauthorizedException('Invalid refresh token.');
-    if (tokenRecord.expiresAt < new Date())
+
+    // ------------------------
+    // REFRESH TOKEN INVÁLIDO
+    // -------------------------
+    if (!isValid) {
+      console.log(
+        `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] REFRESH TOKEN INVÁLIDO`,
+      );
+      throw new UnauthorizedException('Invalid refresh token.');
+    }
+
+    // --------------------------------------
+    // TESTANDO SE REFRESH TOKEN EXPIROU
+    // --------------------------------------
+    if (tokenRecord.expiresAt < new Date()) {
+      console.log(
+        `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] REFRESH TOKEN EXPIRADO, FAÇA LOGIN NOVAMENTE ---`,
+      );
       throw new UnauthorizedException('Refresh token expired');
-    // Como todos os passos anteriores validou o refreshToken, gera um novo accessToken que mantem o usuário logado ate o refreshToken expirar(duração de 7 dias)
+    }
+
+    console.log(`[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] REFRESH TOKEN VÁLIDO`);
+
+    // -------------------------
+    // GERANDO NOVO ACCESS TOKEN
+    // -------------------------
+    console.log(
+      `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] GERANDO NOVO ACCESS TOKEN`,
+    );
     const accessToken = this.generateToken(tokenRecord.user);
-    // gerar novo refresh token e remover o antigo
-    await this.refreshTokenRepository.remove(tokenRecord);
-    const newRefreshToken = await this.generateRefreshToken(tokenRecord.user);
+
+    // ----------------------------
+    // RETORNANDO NOVO ACCESS TOKEN
+    // ----------------------------
+    console.log(
+      `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] RETORNANDO NOVO ACCESS TOKEN`,
+    );
     return {
       accessToken: accessToken,
-      selector: newRefreshToken.selector,
-      refreshToken: newRefreshToken.refreshToken,
+      selector: tokenRecord.selector,
+      refreshToken: oldToken,
     };
   }
 
   // Gera accessToken
   private generateToken(user: User): string {
     const payload = { sub: user.id, name: user.name };
+    console.log(
+      `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] NOVO ACCESS TOKEN GERADO`,
+    );
     return this.jwtService.sign(payload);
   }
 

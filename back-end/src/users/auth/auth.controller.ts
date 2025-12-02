@@ -53,11 +53,17 @@ export class AuthController {
   async refreshToken(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<LoginResponse> {
+    console.log(
+      `--- [BACK - SRC/USERS/AUTH/AUTH.CONTROLLER.TS ] CHAMADA DO FRONT REFRESH PARA O BACK REFRESH ---`,
+    );
+    console.log('[OLD TOKEN] ', refreshTokenDto.oldToken);
+    console.log('[SELECTOR]  ', refreshTokenDto.selector);
     const { accessToken, selector, refreshToken } =
       await this.authService.refreshToken(
         refreshTokenDto.selector,
         refreshTokenDto.oldToken,
       );
+
     return new LoginResponse({ accessToken, selector, refreshToken });
   }
   @Post('logout')

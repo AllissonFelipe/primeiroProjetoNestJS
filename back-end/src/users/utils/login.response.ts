@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class LoginResponse {
   constructor(private readonly partial?: Partial<LoginResponse>) {
@@ -7,13 +7,16 @@ export class LoginResponse {
   }
   @Expose()
   @IsString()
-  accessToken: string;
+  @IsOptional()
+  accessToken?: string;
 
   @Expose()
   @IsString()
-  refreshToken: string;
+  @IsOptional()
+  refreshToken?: string;
 
   @Expose()
   @IsString()
-  selector: string;
+  @IsOptional()
+  selector?: string;
 }
