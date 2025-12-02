@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
 interface ProfileData {
   id: string;
   name: string;
@@ -13,8 +13,10 @@ interface ProfileData {
 }
 
 export default function ProfileForm() {
+  const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState("");
   const [msg, setMsg] = useState("");
 
   const [form, setForm] = useState({
@@ -24,20 +26,43 @@ export default function ProfileForm() {
 
   useEffect(() => {
     const load = async () => {
-      const token = localStorage.getItem("accessToken");
+      let token = localStorage.getItem("accessToken");
 
-      const res = await fetch("api/profile", {
+      let res = await fetch("api/profile", {
         method: "GET",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       });
-      const data = await res.json();
+
+      let data = await res.json();
+
+      if (data.accessToken && !data.name) {
+        console.log(
+          "[FRONT - APP/PROFILE/PROFILEFORM.TSX] REFRESH DETECTADO, SALVANDO NOVO TOKEN..."
+        );
+        localStorage.setItem("accessToken", data.accessToken);
+        token = data.accessToken;
+        res = await fetch("api/profile", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        data = await res.json();
+      }
 
       if (res.ok) {
         setProfile(data);
         setForm({ name: data.name, email: data.email });
+      } else {
+        setErro(data.message || "Erro ao carregar dados.");
       }
+
       setLoading(false);
     };
     load();
@@ -68,7 +93,7 @@ export default function ProfileForm() {
     setMsg("Perfil atualizado com sucesso");
   };
   if (loading) return <p>Carregando...</p>;
-  if (!profile) return <p>Erro ao carregar dados</p>;
+  if (!profile) return <p className="text-red-600">{erro}</p>;
 
   return (
     <div className="max-w-md mx-auto mt-8 p-4 border rounded shadow">

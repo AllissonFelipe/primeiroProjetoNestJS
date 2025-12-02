@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     sameSite: "strict", // Garantir que o cookie só será enviado em requisições do mesmo domínio
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
   });
-  // Setando o refreshToken como cookie comum(não HttpOnly), para ser acessado via JS
+  // Setando o selector como cookie comum(não HttpOnly), para ser acessado via JS
   response.cookies.set("selector", data.selector, {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",

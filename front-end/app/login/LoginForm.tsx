@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginForm() {
@@ -11,7 +11,7 @@ export default function LoginForm() {
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  //   const router = useRouter();
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,10 +35,13 @@ export default function LoginForm() {
       setLoading(false);
       return;
     }
+    // Salvando token(curto prazo) e selector para refreshToken(longo prazo)
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("selector", data.selector);
     setMsg("Usuário logado com sucesso!");
-    // router.push("/profile");
+
+    router.push("/profile");
+
     setLoading(false);
   };
 
