@@ -1,5 +1,6 @@
 // --- APP/API/REFRESH/ROUTE.TS --- //
 
+import { Colors } from "@/lib/utils/console.log.colors";
 import { NextResponse } from "next/server";
 const reset = "\x1b[0m";
 const bold = "\x1b[1m";
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
   const data = await backendResponse.json();
 
   console.log(
-    `${yellow}[FRONT - APP/API/REFRESH/ROUTE.TS]${reset} DADOS RECEBIDOS DO BACK-END:`
+    `${Colors.yellow}[FRONT - APP/API/REFRESH/ROUTE.TS]${Colors.reset} DADOS RECEBIDOS DO BACK-END:`
   );
   console.log(
     `${green}ACCESSTOKEN:${reset} ${cyan}${data.accessToken}${reset}`

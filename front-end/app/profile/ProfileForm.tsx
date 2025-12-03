@@ -26,9 +26,9 @@ export default function ProfileForm() {
 
   useEffect(() => {
     const load = async () => {
-      let token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken");
 
-      let res = await fetch("api/profile", {
+      const res = await fetch("api/profile", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -37,23 +37,13 @@ export default function ProfileForm() {
         credentials: "include",
       });
 
-      let data = await res.json();
+      const data = await res.json();
 
-      if (data.accessToken && !data.name) {
+      if (data.accessToken) {
         console.log(
           "[FRONT - APP/PROFILE/PROFILEFORM.TSX] REFRESH DETECTADO, SALVANDO NOVO TOKEN..."
         );
         localStorage.setItem("accessToken", data.accessToken);
-        token = data.accessToken;
-        res = await fetch("api/profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-        data = await res.json();
       }
 
       if (res.ok) {
