@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export interface MyFetchOptions {
-  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+export interface MyFetchOptions extends RequestInit {
   token?: string;
-  body?: any;
-  headers?: Record<string, string>;
-  credentials?: RequestCredentials;
+  skipRefresh?: boolean;
 }

@@ -1,8 +1,15 @@
 "use client";
 
+interface RegisterFormProps {
+  onSuccess: () => void;
+}
+
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function RegisterForm() {
+export default function RegisterForm({ onSuccess }: RegisterFormProps) {
+  const router = useRouter();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -10,7 +17,7 @@ export default function RegisterForm() {
     password: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,9 +26,11 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true);
     setMsg("");
 
+    // FORÇAR LOGOUT ANTES DE REGISTRAR NOVA CONTA
+    localStorage.removeItem("accessToken");
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -32,12 +41,14 @@ export default function RegisterForm() {
 
     if (!res.ok) {
       setMsg(data.message || "Erro inesperado");
-      setLoading(false);
+      // setLoading(false);
       return;
     }
 
-    setMsg("Usuário criado com sucesso!");
-    setLoading(false);
+    setMsg("Conta criada com sucesso!");
+    onSuccess(); // VAI PARA ABA DE LOGIN
+    // router.push("/login");
+    // setLoading(false);
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -47,7 +58,7 @@ export default function RegisterForm() {
         placeholder="Nome completo"
         value={form.name}
         onChange={handleChange}
-        className="border p-2 w-full"
+        className="border p-2 w-full rounded text-black font-bold"
         required
       />
 
@@ -57,7 +68,7 @@ export default function RegisterForm() {
         placeholder="Email"
         value={form.email}
         onChange={handleChange}
-        className="border p-2 w-full"
+        className="border p-2 w-full rounded text-black font-bold"
         required
       />
 
@@ -67,7 +78,7 @@ export default function RegisterForm() {
         placeholder="CPF"
         value={form.cpf}
         onChange={handleChange}
-        className="border p-2 w-full"
+        className="border p-2 w-full rounded text-black font-bold"
         required
       />
 
@@ -77,17 +88,13 @@ export default function RegisterForm() {
         placeholder="Senha forte"
         value={form.password}
         onChange={handleChange}
-        className="border p-2 w-full"
+        className="border p-2 w-full rounded text-black font-bold"
         required
       />
-      <button
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-      >
-        {loading ? "Carregando..." : "Criar conta"}
+      <button className="bg-green-600 text-white w-full py-2 rounded hover:bg-green-500 transition">
+        Cadastrar
       </button>
-
-      {msg && <p className="text-center mt-2">{msg}</p>}
+      {msg && <p className="text-green-500">{msg}</p>}
     </form>
   );
 }

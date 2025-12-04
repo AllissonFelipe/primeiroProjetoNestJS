@@ -76,6 +76,11 @@ export default function ProfileForm() {
       body: JSON.stringify(form),
     });
     const data = await res.json();
+
+    if (data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+    }
+
     if (!res.ok) {
       setMsg(data.message || "Erro ao atualizar");
       return;

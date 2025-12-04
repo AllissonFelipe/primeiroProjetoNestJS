@@ -13,8 +13,8 @@ export async function apiFetchUser(
   // ---------------------------------------
   // MONTANDO O HEADERS PARA MANDAR NO FETCH
   // ---------------------------------------
-  let headers: Record<string, string> = {
-    ...(options.headers || {}),
+  let headers: HeadersInit = {
+    ...toHeaderRecord(options.headers || {}),
     ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
   };
 
@@ -22,9 +22,14 @@ export async function apiFetchUser(
     `${Colors.yellow}[FRONT - LIB/API/API.FETCH.USER.TS]${Colors.reset} 🔎 REALIZANDO PRIMEIRA TENTATIVA DO MÉTODO FETCH`
   );
   logColor("METHOD", options.method);
-  logColor("HEADERS", options.headers);
-  logColor("BODY", options.body);
-  logColor("TOKEN", options.token);
+  logColor(
+    "HEADERS",
+    options.headers ? JSON.stringify(options.headers, null, 2) : undefined
+  );
+  logColor(
+    "BODY",
+    options.body ? JSON.stringify(options.body, null, 2) : undefined
+  );
   // ---------------------------------------------
   // REALIZANDO PRIMEIRA TENTATICA DO MÉTODO FETCH
   // ---------------------------------------------
@@ -42,7 +47,7 @@ export async function apiFetchUser(
   // ------------------------------------------------------------------------------
   // CASO O TOKEN EXPIROU E RECEBEMOS UNAUTHORIZED - FAÇA REFRESH + OUTRA TENTATIVA
   // ------------------------------------------------------------------------------
-  if (response.status === 401) {
+  if (response.status === 401 && !options.skipRefresh) {
     console.log(
       `${Colors.yellow}[FRONT - LIB/API/API.FETCH.USER.TS]${Colors.reset} ❌ 401-UNAUTHORIZED - REALIZANDO REFRESH DO TOKEN`
     );
@@ -157,4 +162,30 @@ export async function getAuthCookies() {
     selector: cookieStore.get("selector")?.value,
     refreshToken: cookieStore.get("refreshToken")?.value,
   };
+}
+
+// ---------------------------------------------------------------
+// FUNÇÃO AUXILIAR PARA HEADERS SER DO TIPO RECORD<STRING, STRING>
+// ---------------------------------------------------------------
+function toHeaderRecord(
+  headers: HeadersInit | undefined
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  if (!headers) return result;
+
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+  } else if (Array.isArray(headers)) {
+    headers.forEach(([key, value]) => {
+      result[key] = value;
+    });
+  } else {
+    // Já é Record<string,string>
+    Object.assign(result, headers);
+  }
+
+  return result;
 }

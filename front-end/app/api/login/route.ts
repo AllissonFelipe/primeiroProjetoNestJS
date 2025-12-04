@@ -1,9 +1,11 @@
+import { apiFetchUser } from "@/lib/api/api.fetch.user";
+import { Colors } from "@/lib/utils/console.log.colors";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3000";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const body = await req.json();
 
   // Pegando cookies do servidor se existirem (correto para Next.js)
@@ -17,10 +19,14 @@ export async function POST(req: Request) {
     selector: selector || undefined,
     refreshToken: refreshToken || undefined,
   };
-  const res = await fetch(`${BACKEND_URL}/auth/login`, {
+  console.log(
+    `${Colors.yellow}[FRONT - APP/API/LOGIN/ROUTE.TS]${Colors.reset} 🔎 INDO PARA LIB/API/API.FETCH.USER.TS  ${Colors.yellow}--- POST | LOGIN USER ---${Colors.reset}`
+  );
+  const res = await apiFetchUser(req, `${BACKEND_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(bodyWithTokens),
+    body: bodyWithTokens, // apiFetchUser ja realiza JSON.stringify
+    skipRefresh: true,
   });
   const data = await res.json();
 
