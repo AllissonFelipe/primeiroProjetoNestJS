@@ -100,10 +100,10 @@ describe('AppController (e2e)', () => {
     const resq = await request(app.getHttpServer())
       .post('/auth/login')
       .send(userDto)
-      .expect(401);
-    expect(resq.body.message).toBe('Invalid credentials.');
-    expect(resq.body.error).toBe('Unauthorized');
-    expect(resq.body).toHaveProperty('statusCode');
+      .expect(404);
+    expect(resq.body.message).toBe('Usuário não encontrado');
+    expect(resq.body.error).toBe('Not Found');
+    expect(resq.body).toHaveProperty('status');
     expect(resq.body).toHaveProperty('message');
     expect(resq.body.message.toLowerCase()).not.toContain('email');
     expect(resq.body.message.toLowerCase()).not.toContain('password');
@@ -111,14 +111,19 @@ describe('AppController (e2e)', () => {
   });
   // Login com password incorreto
   it('should fail login with incorrect password', async () => {
+    // const user = createUser({ email: 'allissonTeste@example.com' });
+    // await request(app.getHttpServer())
+    //   .post('/auth/register')
+    //   .send(user)
+    //   .expect(201);
     const userDto = loginUser({ email: 'allissonTeste@example.com' });
     const resq = await request(app.getHttpServer())
       .post('/auth/login')
       .send(userDto)
       .expect(401);
-    expect(resq.body.message).toBe('Invalid credentials.');
+    expect(resq.body.message).toBe('Senha incorreta');
     expect(resq.body.error).toBe('Unauthorized');
-    expect(resq.body).toHaveProperty('statusCode');
+    expect(resq.body).toHaveProperty('status');
     expect(resq.body).toHaveProperty('message');
     expect(resq.body.message.toLowerCase()).not.toContain('email');
     expect(resq.body.message.toLowerCase()).not.toContain('password');

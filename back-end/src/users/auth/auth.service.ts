@@ -5,7 +5,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users.service';
 import { PasswordService } from '../password/password.service';
 import { CreateUserDto } from '../dtos/createUser.dto';
@@ -41,13 +45,21 @@ export class AuthService {
     const user = await this.usersService.findOneUserByEmail(loginDto.email);
     // Se não o achou lança um exceção
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials.');
+      throw new NotFoundException({
+        message: 'Usuário não encontrado',
+        status: 404,
+        error: 'Not Found',
+      });
     }
     // se achou o usuário mas a senha está errada, lança uma exceção
     if (
       !(await this.passwordService.verify(loginDto.password, user.password))
     ) {
-      throw new UnauthorizedException('Invalid credentials.');
+      throw new UnauthorizedException({
+        message: 'Senha incorreta',
+        error: 'Unauthorized',
+        status: 401,
+      });
     }
 
     // Gerando accessToken (curto prazo) - se email e senha estão corretos

@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: senac@02
       POSTGRES_DB: nestJS_1
     ports:
-      - '5432:5432'
+      - '5430:5432'
     volumes:
       - postgres_data_1:/var/lib/postgresql/data
     healthcheck:
