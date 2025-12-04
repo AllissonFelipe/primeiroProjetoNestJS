@@ -15,10 +15,11 @@ import { AuthService } from './auth/auth.service';
 import { AuthGuard } from './auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
+import { Role } from './roles/role.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken]),
+    TypeOrmModule.forFeature([User, RefreshToken, Role]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

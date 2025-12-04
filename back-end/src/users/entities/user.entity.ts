@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -9,7 +11,7 @@ import {
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { Expose } from 'class-transformer';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
-
+import { Role } from '../roles/role.entity';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -48,6 +50,21 @@ export class User {
   @UpdateDateColumn()
   @Expose()
   updatedAt: Date;
+
+  // { eager: true } faz com que as roles venham automaticamente quando buscar o usuário — ótimo para autenticação.
+  @ManyToMany(() => Role, (role) => role.users, { eager: true })
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'role_id',
+      referencedColumnName: 'id',
+    },
+  })
+  roles: Role[];
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   @Expose()

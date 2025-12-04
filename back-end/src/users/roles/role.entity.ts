@@ -1,7 +1,7 @@
-import { ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../entities/user.entity';
 
-@Entity('roles')
+@Entity()
 export class Role {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
     "migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
-    "migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts"
+    "migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts",
+    "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -d src/data-source.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

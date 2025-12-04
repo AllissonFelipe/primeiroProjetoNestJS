@@ -14,6 +14,7 @@ import { authConfig } from './config/auth.config';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { RefreshToken } from './users/auth/entities/refresh-token.entity';
+import { Role } from './users/roles/role.entity';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { RefreshToken } from './users/auth/entities/refresh-token.entity';
       inject: [ConfigService],
       useFactory: (configService: TypedConfigService) => ({
         ...configService.get('database'),
-        entities: [User, RefreshToken],
+        entities: [User, RefreshToken, Role],
       }),
     }),
     ConfigModule.forRoot({
