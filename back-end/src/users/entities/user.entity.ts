@@ -64,6 +64,7 @@ export class User {
       referencedColumnName: 'id',
     },
   })
+  @Expose()
   roles: Role[];
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)

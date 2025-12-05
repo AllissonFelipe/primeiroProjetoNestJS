@@ -211,7 +211,13 @@ export class AuthService {
 
   // Gera accessToken
   private generateToken(user: User): string {
-    const payload = { sub: user.id, name: user.name };
+    const payload = {
+      sub: user.id,
+      name: user.name,
+      email: user.email,
+      cpf: user.cpf,
+      roles: user.roles.map((role) => role.name),
+    };
     console.log(
       `[BACK - SRC/USERS/AUTH/AUTH.SERVICE.TS] NOVO ACCESS TOKEN GERADO`,
     );

@@ -1,15 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { createUser } from './utils/user.factory';
 import { loginUser } from './utils/login.factory';
+import { ExpoLegacyDriver } from 'typeorm/driver/expo/legacy/ExpoLegacyDriver.js';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -286,5 +288,46 @@ describe('AppController (e2e)', () => {
       .expect(409);
     expect(result.body).toHaveProperty('statusCode', 409);
     expect(result.body.message).toBe('CPF ja cadastrado no sistema.');
+  });
+
+  // ---------------------------------------------------------
+  // TESTE PARA VER SE USUÁRIO CRIADO TEM ROLE DEFAULT('USER')
+  // ---------------------------------------------------------
+  it('user created should have default role(USER)', async () => {
+    const user = createUser();
+    const result = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user)
+      .expect(201);
+    expect(result.body).toBeDefined();
+    expect(Array.isArray(result.body.roles)).toBe(true);
+    expect(result.body.roles).toHaveLength(1);
+    expect(result.body.roles).toContainEqual(
+      expect.objectContaining({ name: 'USER' }),
+    );
+    const nameRole = result.body.roles.map((role) => role.name);
+    expect(nameRole).toStrictEqual(['USER']);
+  });
+  // ----------------------------------------------------------------
+  // TESTE PARA UM USUÁRIO COM ROLE 'USER' TENTAR REALIZAR TAREFAS DE ADMINISTRADORES 'ADMIN'
+  // ----------------------------------------------------------------
+  it('should return 403 Forbidden when a USER attempts to access an ADMIN route', async () => {
+    const user = createUser();
+    const result = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user)
+      .expect(HttpStatus.CREATED);
+    const loginUser = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: user.email, password: user.password })
+      .expect(HttpStatus.OK);
+    const token = loginUser.body.accessToken;
+    console.log(token);
+    const profileAllUsers = await request(app.getHttpServer())
+      .get('/admin/users')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(HttpStatus.FORBIDDEN);
+    expect(profileAllUsers.body.statusCode).toBe(HttpStatus.FORBIDDEN);
+    expect(profileAllUsers.body.error).toBe('Forbidden');
   });
 });

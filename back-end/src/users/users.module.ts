@@ -16,6 +16,9 @@ import { AuthGuard } from './auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { Role } from './roles/role.entity';
+import { RolesGuard } from './roles/roles.guard';
+import { AdminUserController } from './admin/admin.users.controller';
+import { AdminUserService } from './admin/admin.users.service';
 
 @Module({
   imports: [
@@ -35,12 +38,18 @@ import { Role } from './roles/role.entity';
     PasswordService,
     UsersService,
     AuthService,
+    AdminUserService,
     AuthGuard,
+    RolesGuard,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: AuthGuard, // 1º -> autentica o token
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard, // 2º -> checa roles
     },
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminUserController],
 })
 export class UsersModule {}

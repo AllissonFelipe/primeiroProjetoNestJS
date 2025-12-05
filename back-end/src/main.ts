@@ -16,5 +16,7 @@ async function bootstrap() {
     origin: 'http://localhost:5000', // Porta do Next.js
     methods: 'GET,POST,PUT,DELETE',
   });
+  await app.listen(3000);
+  console.log('🚀 Backend rodando em http://localhost:3000');
 }
 bootstrap();

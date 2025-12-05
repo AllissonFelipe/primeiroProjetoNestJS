@@ -8,7 +8,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../../entities/user.entity';
 import { CreateUserDto } from 'src/users/dtos/createUser.dto';
 import { LoginDto } from 'src/users/dtos/login.dto';
-import { UnauthorizedException } from '@nestjs/common';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { RefreshToken } from '../entities/refresh-token.entity';
 
 describe('AuthService', () => {
@@ -84,6 +84,7 @@ describe('AuthService', () => {
       name: 'Allisson',
       email: 'allisson@gmail.com',
       cpf: '04450463927',
+      roles: [{ name: 'ADMIN' }, { name: 'MODERATOR' }],
     } as User;
     it('should return a token if credentials are valid', async () => {
       mockUsersService.findOneUserByEmail.mockResolvedValue(user);
@@ -100,6 +101,9 @@ describe('AuthService', () => {
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: user.id,
         name: user.name,
+        email: user.email,
+        cpf: user.cpf,
+        roles: ['ADMIN', 'MODERATOR'],
       });
       expect(result).toEqual({
         accessToken: 'token',
@@ -113,7 +117,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       mockUsersService.findOneUserByEmail.mockResolvedValue(null);
       await expect(service.loginUser(loginDto)).rejects.toThrow(
-        UnauthorizedException,
+        NotFoundException,
       );
     });
     it('should throw UnauthorizedException if password is invalid', async () => {

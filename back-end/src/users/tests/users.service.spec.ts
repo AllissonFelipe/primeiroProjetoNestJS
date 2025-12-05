@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -12,11 +13,13 @@ import { PasswordService } from '../password/password.service';
 import { Repository } from 'typeorm';
 import { createUser } from './utils/user.factory';
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Role } from '../roles/role.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
   let userRepository: Repository<User>;
   let passwordService: PasswordService;
+  let roleRepository: Repository<Role>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,12 +44,26 @@ describe('UsersService', () => {
             verify: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(Role),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        // 👈 NOVO: Mock para o Repositório de Roles
+        {
+          provide: getRepositoryToken(Role),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
     passwordService = module.get<PasswordService>(PasswordService);
+    roleRepository = module.get<Repository<Role>>(getRepositoryToken(Role)); //
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -58,9 +75,15 @@ describe('UsersService', () => {
   // Teste para a função de criar um novo usuário
   it('should create a User', async () => {
     const user = createUser();
+    const defaultRole = { id: 1, name: 'USER' } as unknown as Role;
     const hashedPassword = 'hashedPassword';
+    jest.spyOn(roleRepository, 'findOne').mockResolvedValue(defaultRole);
     jest.spyOn(passwordService, 'hash').mockResolvedValue(hashedPassword);
-    const savedUser = { ...user, password: hashedPassword };
+    const savedUser = {
+      ...user,
+      password: hashedPassword,
+      roles: [defaultRole],
+    };
     jest.spyOn(userRepository, 'create').mockReturnValue(savedUser);
     jest.spyOn(userRepository, 'save').mockResolvedValue(savedUser);
     const result = await service.createUser(user);
@@ -68,6 +91,24 @@ describe('UsersService', () => {
     expect(passwordService.hash).toHaveBeenCalledWith(user.password);
     expect(userRepository.create).toHaveBeenCalledWith(savedUser);
     expect(userRepository.save).toHaveBeenCalledWith(savedUser);
+  });
+
+  // ATRIBUIÇÃO DE DEFAULT ROLE AO CRIAR USUÁRIO
+  it('should assign default role USER to the new account', async () => {
+    const user = createUser();
+    const hashedPassword = 'hashedPassword';
+    const defaultRole = { id: 1, name: 'USER' } as unknown as Role;
+    jest.spyOn(passwordService, 'hash').mockResolvedValue(hashedPassword);
+    jest.spyOn(roleRepository, 'findOne').mockResolvedValue(defaultRole);
+    const savedUser = {
+      ...user,
+      password: hashedPassword,
+      roles: [defaultRole],
+    };
+    const result = await service.createUser(savedUser);
+    expect(roleRepository.findOne).toHaveBeenCalledWith({
+      where: { name: 'USER' },
+    });
   });
 
   // Teste para verificar se email ja existe
